@@ -26,5 +26,5 @@ jobs:
       with:
         context: .
         push: true
-        tags: Gan-Explore/comfyui-faceid:latest
+        tags: gandesh/comfyui-faceid:latest
 
