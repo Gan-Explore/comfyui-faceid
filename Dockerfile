@@ -1,28 +1,49 @@
-FROM pytorch/pytorch:2.1.2-cuda12.1-cudnn8-devel
+# --------------------------------------------------
+# Extend Official RunPod ComfyUI Base
+# --------------------------------------------------
+FROM runpod/comfyui-base:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
 
-WORKDIR /workspace
+WORKDIR /workspace/runpod-slim/ComfyUI
 
-RUN apt-get update && apt-get install -y \
-    git \
-    wget \
-    libgl1 \
-    libglib2.0-0 \
-    ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
+# --------------------------------------------------
+# Upgrade pip tools
+# --------------------------------------------------
+RUN pip install --upgrade pip setuptools wheel
 
-RUN git clone https://github.com/comfyanonymous/ComfyUI.git
+# --------------------------------------------------
+# FaceID / IPAdapter Plus V2 Dependencies
+# --------------------------------------------------
+RUN pip install --no-cache-dir \
+    insightface==0.7.3 \
+    onnxruntime-gpu==1.16.3 \
+    onnxruntime \
+    opencv-python-headless
 
-WORKDIR /workspace/ComfyUI
+# --------------------------------------------------
+# (Optional but Recommended) xFormers for SDXL
+# --------------------------------------------------
+RUN pip install --no-cache-dir xformers --index-url https://download.pytorch.org/whl/cu121
 
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+# --------------------------------------------------
+# Ensure model directories exist
+# --------------------------------------------------
+RUN mkdir -p \
+    /workspace/runpod-slim/comfy/models/checkpoints \
+    /workspace/runpod-slim/comfy/models/ipadapter \
+    /workspace/runpod-slim/comfy/models/loras \
+    /workspace/runpod-slim/comfy/models/clip_vision \
+    /workspace/runpod-slim/comfy/models/controlnet \
+    /workspace/runpod-slim/comfy/models/vae
 
-RUN pip install insightface==0.7.3 onnxruntime-gpu onnxruntime
-
-RUN mkdir -p models/ipadapter models/loras models/clip_vision
-
+# --------------------------------------------------
+# Expose UI Port
+# --------------------------------------------------
 EXPOSE 8188
 
-CMD ["python", "main.py", "--listen", "0.0.0.0", "--port", "8188"]
+# --------------------------------------------------
+# Keep RunPod's Original Startup Script
+# --------------------------------------------------
+CMD ["bash", "/start.sh"]
